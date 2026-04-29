@@ -28,12 +28,11 @@ public class UserDao {
 				if (user.getPassword().equals(request.getPassword())) {
 					return user;
 				}
-			} else {
-				return null;
 			}
-
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			if(session!=null) session.close();
 		}
 		return null;
 	}
@@ -43,16 +42,20 @@ public class UserDao {
 		String msg = null;
 		try {
 			session = factory.openSession();
+			session.beginTransaction(); // ✅ FIX
+
 			User user = session.get(User.class, username);
-			session.delete(user);
-			session.beginTransaction().commit();
-			msg = "deleted";
+			if(user!=null){
+				session.delete(user);
+				session.getTransaction().commit(); // ✅ FIX
+				msg = "deleted";
+			}
 
 		} catch (Exception e) {
 			msg = null;
 			e.printStackTrace();
 		} finally {
-			session.close();
+			if(session!=null) session.close();
 		}
 		return msg;
 	}
@@ -62,13 +65,18 @@ public class UserDao {
 
 		try {
 			session = factory.openSession();
+			session.beginTransaction(); // ✅ FIX
+
 			session.update(user);
-			session.beginTransaction().commit();
+
+			session.getTransaction().commit(); // ✅ FIX
 			return user;
 
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
+		} finally {
+			if(session!=null) session.close();
 		}
 	}
 
@@ -83,7 +91,7 @@ public class UserDao {
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			session.close();
+			if(session!=null) session.close();
 		}
 		return list;
 	}
@@ -99,7 +107,7 @@ public class UserDao {
 			e.printStackTrace();
 
 		} finally {
-			session.close();
+			if(session!=null) session.close();
 		}
 		return user;
 	}
@@ -109,10 +117,15 @@ public class UserDao {
 		User user2 = null;
 		try {
 			session = factory.openSession();
+
+			session.beginTransaction(); // ✅ FIX (MOST IMPORTANT)
+
 			user2 = session.get(User.class, user.getUsername());
+
 			if (user2 == null) {
 				session.save(user);
-				session.beginTransaction().commit();
+
+				session.getTransaction().commit(); // ✅ FIX
 				return user;
 			}
 
@@ -120,7 +133,7 @@ public class UserDao {
 			e.printStackTrace();
 			return null;
 		} finally {
-			session.close();
+			if(session!=null) session.close();
 		}
 		return null;
 	}
@@ -137,7 +150,7 @@ public class UserDao {
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			session.close();
+			if(session!=null) session.close();
 		}
 		return list;
 	}
@@ -154,7 +167,7 @@ public class UserDao {
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			session.close();
+			if(session!=null) session.close();
 		}
 		return list;
 	}
